@@ -23,6 +23,7 @@ import android.content.SharedPreferences.Editor;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.DisplayMetrics;
 
 import com.opentok.android.Connection;
 import com.opentok.android.OpentokError;
@@ -33,6 +34,7 @@ import com.opentok.android.Stream;
 import com.opentok.android.Stream.StreamVideoType;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
+import com.opentok.android.BaseVideoRenderer;
 
 
 public class OpenTokAndroidPlugin extends CordovaPlugin implements
@@ -114,14 +116,17 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
               ratioIndex = 9;
           }
 
-          widthRatio = (float) mProperty.getDouble(ratioIndex);
-          heightRatio = (float) mProperty.getDouble(ratioIndex + 1);
+          DisplayMetrics metrics = new DisplayMetrics();
+          cordova.getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-          mView.setY( mProperty.getInt(1) * heightRatio * 3);
-          mView.setX( mProperty.getInt(2) * widthRatio * 3);
+          widthRatio = (float) mProperty.getDouble(ratioIndex) * metrics.density;
+          heightRatio = (float) mProperty.getDouble(ratioIndex + 1) * metrics.density;
+
+          mView.setY( mProperty.getInt(1) * heightRatio);
+          mView.setX( mProperty.getInt(2) * widthRatio);
           ViewGroup.LayoutParams params = mView.getLayoutParams();
-          params.height = (int) (mProperty.getInt(4) * heightRatio * 3);
-          params.width = (int) (mProperty.getInt(3) * widthRatio * 3);
+          params.height = (int) (mProperty.getInt(4) * heightRatio);
+          params.width = (int) (mProperty.getInt(3) * widthRatio);
           mView.setLayoutParams(params);
           updateZIndices();
         }catch( Exception e ){
@@ -177,6 +182,7 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
         mPublisher = new Publisher(cordova.getActivity().getApplicationContext(), publisherName);
         mPublisher.setCameraListener(this);
         mPublisher.setPublisherListener(this);
+        mPublisher.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
         try{
           // Camera is swapped in streamCreated event
           if( compareStrings(this.mProperty.getString(7), "false") ){
@@ -266,6 +272,7 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
         mSubscriber = new Subscriber(cordova.getActivity(), mStream);
         mSubscriber.setVideoListener(this);
         mSubscriber.setSubscriberListener(this);
+        mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
         ViewGroup frame = (ViewGroup) cordova.getActivity().findViewById(android.R.id.content);
         this.mView = mSubscriber.getView();
         frame.addView( this.mView );
